@@ -12,7 +12,6 @@ import android.widget.ListView;
  */
 
 public class SwapableListView extends ListView {
-    private String TAG = "swapableListView";
     private SwapLayout preSwapedView, curSwapedView;
     private float preX, preY;
     private final int DIRECTION_NONE = -1;
@@ -46,7 +45,6 @@ public class SwapableListView extends ListView {
     @Override
     public void setOnItemSelectedListener(OnItemSelectedListener listener) {
         super.setOnItemSelectedListener(listener);
-
     }
 
     @Override
