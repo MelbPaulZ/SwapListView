@@ -1,15 +1,13 @@
 package com.example.paul.swaplistview;
 
 import android.support.v4.view.GestureDetectorCompat;
-import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.animation.AccelerateInterpolator;
+import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
-import android.view.animation.LinearInterpolator;
 import android.view.animation.TranslateAnimation;
 import android.widget.AbsListView;
 import android.widget.FrameLayout;
@@ -20,38 +18,35 @@ import android.widget.FrameLayout;
 
 public class SwapLayout extends FrameLayout {
     private View contentView;
-    private SwapMenuView swapMenuView;
+    private SwapMenuView rightSwapMenuView, leftSwapMenuView;
     private GestureDetector.OnGestureListener gestureListener;
     private GestureDetectorCompat gestureDetector;
-    private int height,width;
-    private int preferHeight, preferWidth;
     private float beforeX, beforeY, currentX, currentY;
     private int swapStatue;
     private int position;
     private int curSwapPosition = -1;
     private int swapDirection = 0;
 
-    private String TAG = "swapLayout";
-
-    public final static int SWAP_THRESHOLD = 100;
-
+    // swap statues indicate the current swapped status {left, origin, right}
     public final static int SWAP_STATUS_LEFT = 1000;
     public final static int SWAP_STATUS_RIGHT = 1001;
     public final static int SWAP_STATUS_ORIGIN = 1002;
 
+    // swap direction indicate the current swap direction {left, right}
     public final static int SWAP_DIRECTION_LEFT = -5;
     public final static int SWAP_DIRECTION_RIGHT = 5;
     public int swapMoveDistance = 150;
 
 
-    public SwapLayout(View contentView, SwapMenuView swapMenuView){
-        this(contentView, swapMenuView, null, null);
+    public SwapLayout(View contentView, SwapMenuView leftSwapMenuView, SwapMenuView rightSwapMenuView){
+        this(contentView, leftSwapMenuView,rightSwapMenuView, null, null);
     }
 
-    public SwapLayout(View contentView, SwapMenuView swapMenuView,Interpolator closeInterpolator, Interpolator openInterpolator){
+    public SwapLayout(View contentView, SwapMenuView leftSwapMenuView, SwapMenuView rightSwapMenuView,  Interpolator closeInterpolator, Interpolator openInterpolator){
         super(contentView.getContext());
         this.contentView = contentView;
-        this.swapMenuView = swapMenuView;
+        this.leftSwapMenuView = leftSwapMenuView;
+        this.rightSwapMenuView = rightSwapMenuView;
         init();
         initSwapListener();
 
@@ -60,11 +55,10 @@ public class SwapLayout extends FrameLayout {
     private void init(){
         setLayoutParams(new AbsListView.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
         contentView.setLayoutParams(new LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT, FrameLayout.LayoutParams.WRAP_CONTENT));
-        height = contentView.getHeight();
-        width = contentView.getWidth();
-
-        swapMenuView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
-        addView(swapMenuView);
+        leftSwapMenuView.setLayoutParams(new LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+        rightSwapMenuView.setLayoutParams(new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT));
+        addView(leftSwapMenuView);
+        addView(rightSwapMenuView);
         addView(contentView);
 
         swapStatue = SWAP_STATUS_ORIGIN;
@@ -107,11 +101,6 @@ public class SwapLayout extends FrameLayout {
                 return false;
             }
         }
-//
-//        if (Math.abs(Math.abs(beforeX) - Math.abs(event.getX())) < SWAP_THRESHOLD){ // wait 10 then swap
-//            return false;
-//        }
-
 
         return true;
     }
@@ -187,7 +176,6 @@ public class SwapLayout extends FrameLayout {
     }
 
 
-
     public void setPosition(int position) {
         this.position = position;
     }
@@ -218,15 +206,17 @@ public class SwapLayout extends FrameLayout {
     @Override
     protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
         super.onMeasure(widthMeasureSpec, heightMeasureSpec);
-        swapMenuView.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
+        leftSwapMenuView.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
+                MeasureSpec.makeMeasureSpec(getMeasuredHeight(), MeasureSpec.EXACTLY));
+        rightSwapMenuView.measure(MeasureSpec.makeMeasureSpec(0, MeasureSpec.UNSPECIFIED),
                 MeasureSpec.makeMeasureSpec(getMeasuredHeight(), MeasureSpec.EXACTLY));
     }
 
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
-
         contentView.layout(0, 0, getMeasuredWidth(), getMeasuredHeight());
-        swapMenuView.layout(getMeasuredWidth() - swapMoveDistance, 0,
+        leftSwapMenuView.layout(0, 0, swapMoveDistance, contentView.getMeasuredHeight());
+        rightSwapMenuView.layout(getMeasuredWidth() - swapMoveDistance, 0,
                 getMeasuredWidth(), contentView.getMeasuredHeight());
     }
 

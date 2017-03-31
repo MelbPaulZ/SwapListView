@@ -38,8 +38,8 @@ public class SwapMenuView extends LinearLayout implements View.OnClickListener{
         parent.setGravity(Gravity.CENTER);
         parent.setOrientation(LinearLayout.VERTICAL);
         parent.setLayoutParams(params);
-        parent.setBackgroundColor(Color.BLACK);
-//        parent.setBackgroundDrawable(swapMenuItem.getBackground());
+        parent.setBackground(swapMenuItem.getBackground());
+//        parent.setBackgroundColor(Color.BLACK);
         addView(parent);
 
     }

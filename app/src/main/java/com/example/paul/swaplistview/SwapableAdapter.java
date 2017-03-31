@@ -53,9 +53,11 @@ public class SwapableAdapter<T extends Object> extends BaseAdapter{
         SwapLayout layout = null;
         if (convertView == null){
             View contentView = adapter.getView(position, convertView, parent);
-            SwapMenu swapMenu = createMenu();
-            SwapMenuView swapMenuView = new SwapMenuView(swapMenu);
-            layout = new SwapLayout(contentView, swapMenuView);
+            SwapMenu leftSwapMenu = createMenu();
+            SwapMenu rightSwapMenu = createMenu();
+            SwapMenuView leftSwapMenuView = new SwapMenuView(leftSwapMenu);
+            SwapMenuView rightSwapMenuView = new SwapMenuView(rightSwapMenu);
+            layout = new SwapLayout(contentView, leftSwapMenuView, rightSwapMenuView);
             layout.setPosition(position);
         }else{
             layout = (SwapLayout) convertView;

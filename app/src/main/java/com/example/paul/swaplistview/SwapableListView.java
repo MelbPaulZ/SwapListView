@@ -67,7 +67,9 @@ public class SwapableListView extends ListView {
                     preSwapedView.resetToOriginal(); // change the previous swapped view to original status if previous view is not current view
                 }
             }
-            curSwapedView.onSwap(ev);
+            if (curSwapedView!=null) { // need to check whether this is null because it might be reused
+                curSwapedView.onSwap(ev);
+            }
         }else if (ev.getAction() == MotionEvent.ACTION_UP){
             preSwapedView = curSwapedView;
             direction = DIRECTION_NONE;
@@ -96,10 +98,4 @@ public class SwapableListView extends ListView {
         return super.onTouchEvent(ev);
     }
 
-    @Override
-    public boolean onInterceptTouchEvent(MotionEvent ev) {
-        Log.i(TAG, "onInterceptTouchEvent: " + ev.getAction());
-
-        return super.onInterceptTouchEvent(ev);
-    }
 }
