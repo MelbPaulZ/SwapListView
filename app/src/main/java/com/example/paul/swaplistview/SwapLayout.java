@@ -4,7 +4,6 @@ import android.support.v4.view.GestureDetectorCompat;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
@@ -19,6 +18,7 @@ import android.widget.FrameLayout;
 public class SwapLayout extends FrameLayout {
     private View contentView;
     private SwapMenuView rightSwapMenuView, leftSwapMenuView;
+    private View.OnClickListener leftClickListener, rightClickListener, onContentClickListener;
     private GestureDetector.OnGestureListener gestureListener;
     private GestureDetectorCompat gestureDetector;
     private float beforeX, beforeY, currentX, currentY;
@@ -35,7 +35,7 @@ public class SwapLayout extends FrameLayout {
     // swap direction indicate the current swap direction {left, right}
     public final static int SWAP_DIRECTION_LEFT = -5;
     public final static int SWAP_DIRECTION_RIGHT = 5;
-    public int swapMoveDistance = 150;
+    public static int SWAP_DISTANCE = 150;
 
 
     public SwapLayout(View contentView, SwapMenuView leftSwapMenuView, SwapMenuView rightSwapMenuView){
@@ -49,6 +49,7 @@ public class SwapLayout extends FrameLayout {
         this.rightSwapMenuView = rightSwapMenuView;
         init();
         initSwapListener();
+        initClickListener();
 
     }
 
@@ -75,7 +76,6 @@ public class SwapLayout extends FrameLayout {
             @Override
             public boolean onFling(MotionEvent e1, MotionEvent e2, float velocityX, float velocityY) {
                 if (e1 == null || e2 == null){
-                    // TODO: 30/3/17 check why this could be null
                     return false;
                 }
                 return super.onFling(e1, e2, velocityX, velocityY);
@@ -91,13 +91,13 @@ public class SwapLayout extends FrameLayout {
         }
 
         if (swapDirection == SWAP_DIRECTION_LEFT) {
-            if (contentView.getLeft() < -swapMoveDistance) {
+            if (contentView.getLeft() < -SWAP_DISTANCE) {
                 return false;
             }
         }
 
         if (swapDirection == SWAP_DIRECTION_RIGHT) {
-            if (contentView.getRight() > contentView.getWidth() + swapMoveDistance){
+            if (contentView.getRight() > contentView.getWidth() + SWAP_DISTANCE){
                 return false;
             }
         }
@@ -105,8 +105,19 @@ public class SwapLayout extends FrameLayout {
         return true;
     }
 
+    private void initClickListener(){
+        
+    }
+
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        return super.onInterceptTouchEvent(ev);
+    }
+
     @Override
     public boolean onTouchEvent(MotionEvent event) {
+        
+
         gestureDetector.onTouchEvent(event);
         return super.onTouchEvent(event);
     }
@@ -139,26 +150,53 @@ public class SwapLayout extends FrameLayout {
 
     private void scrollMenuLayout(MotionEvent event){
         int leftScroll = (int) ( event.getX() - beforeX + contentView.getLeft());
-        if (leftScroll < -swapMoveDistance || leftScroll  > swapMoveDistance){
-            leftScroll = swapDirection==SWAP_DIRECTION_LEFT ? -swapMoveDistance : swapMoveDistance ;
+        if (leftScroll < -SWAP_DISTANCE || leftScroll  > SWAP_DISTANCE){
+            leftScroll = swapDirection==SWAP_DIRECTION_LEFT ? -SWAP_DISTANCE : SWAP_DISTANCE;
         }
         contentView.layout( leftScroll , contentView.getTop(),leftScroll + contentView.getWidth(), contentView.getBottom());
     }
 
     private void postCheck(){
-        if (contentView.getLeft() < -swapMoveDistance/2+1){
+        if (contentView.getLeft() < -SWAP_DISTANCE /2+1){
             leftSwapMax();
-        }else if (contentView.getLeft() > -swapMoveDistance/2  && contentView.getLeft() < swapMoveDistance/2 + 1){
+        }else if (contentView.getLeft() > -SWAP_DISTANCE /2  && contentView.getLeft() < SWAP_DISTANCE /2 + 1){
             swapBackToOrigin();
-        }else if (contentView.getLeft() > swapMoveDistance/2){
+        }else if (contentView.getLeft() > SWAP_DISTANCE /2){
             rightSwapMax();
+        }
+
+        postCheckListener();
+    }
+
+    private void postCheckListener(){
+        switch (swapStatue){
+            case SWAP_STATUS_LEFT:
+                setClickable(false, true);
+                break;
+            case SWAP_STATUS_ORIGIN:
+                setClickable(false, false);
+                break;
+            case SWAP_DIRECTION_RIGHT:
+                setClickable(true, false);
+                break;
+        }
+    }
+
+    private void setClickable(boolean leftClickable, boolean rightClickable){
+        leftSwapMenuView.setClickable(leftClickable);
+        if (leftClickable && leftClickListener!=null){
+            leftSwapMenuView.setOnClickListener(leftClickListener);
+        }
+        rightSwapMenuView.setClickable(rightClickable);
+        if (rightClickable && rightClickListener!=null){
+            rightSwapMenuView.setOnClickListener(rightClickListener);
         }
     }
 
     private void leftSwapMax(){
         // the distance need to be moved, the final distance location
-        applyAnimation(contentView.getLeft() + swapMoveDistance, 0);
-        contentView.layout(-swapMoveDistance, contentView.getTop(), -swapMoveDistance + contentView.getWidth(), contentView.getBottom());
+        applyAnimation(contentView.getLeft() + SWAP_DISTANCE, 0);
+        contentView.layout(-SWAP_DISTANCE, contentView.getTop(), -SWAP_DISTANCE + contentView.getWidth(), contentView.getBottom());
         swapStatue = SWAP_STATUS_LEFT;
     }
 
@@ -170,8 +208,8 @@ public class SwapLayout extends FrameLayout {
 
 
     private void rightSwapMax(){
-        applyAnimation(contentView.getLeft() - swapMoveDistance, 0);
-        contentView.layout(swapMoveDistance, contentView.getTop(), contentView.getWidth() + swapMoveDistance, contentView.getBottom());
+        applyAnimation(contentView.getLeft() - SWAP_DISTANCE, 0);
+        contentView.layout(SWAP_DISTANCE, contentView.getTop(), contentView.getWidth() + SWAP_DISTANCE, contentView.getBottom());
         swapStatue = SWAP_STATUS_RIGHT;
     }
 
@@ -199,8 +237,36 @@ public class SwapLayout extends FrameLayout {
         return swapStatue;
     }
 
+    public boolean isOpen(){
+        return swapStatue == SWAP_STATUS_LEFT || swapStatue == SWAP_STATUS_RIGHT;
+    }
+
     public void setSwapStatue(int swapStatue) {
         this.swapStatue = swapStatue;
+    }
+
+    public SwapMenuView getLeftSwapMenuView() {
+        return leftSwapMenuView;
+    }
+
+    public void setLeftSwapMenuView(SwapMenuView leftSwapMenuView) {
+        this.leftSwapMenuView = leftSwapMenuView;
+    }
+
+    public SwapMenuView getRightSwapMenuView() {
+        return rightSwapMenuView;
+    }
+
+    public void setRightSwapMenuView(SwapMenuView rightSwapMenuView) {
+        this.rightSwapMenuView = rightSwapMenuView;
+    }
+
+    public View getContentView() {
+        return contentView;
+    }
+
+    public void setContentView(View contentView) {
+        this.contentView = contentView;
     }
 
     @Override
@@ -215,9 +281,28 @@ public class SwapLayout extends FrameLayout {
     @Override
     protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
         contentView.layout(0, 0, getMeasuredWidth(), getMeasuredHeight());
-        leftSwapMenuView.layout(0, 0, swapMoveDistance, contentView.getMeasuredHeight());
-        rightSwapMenuView.layout(getMeasuredWidth() - swapMoveDistance, 0,
+        leftSwapMenuView.layout(0, 0, SWAP_DISTANCE, contentView.getMeasuredHeight());
+        rightSwapMenuView.layout(getMeasuredWidth() - SWAP_DISTANCE, 0,
                 getMeasuredWidth(), contentView.getMeasuredHeight());
     }
+
+    public void setOnLeftClickListener(View.OnClickListener leftClickListener){
+        this.leftClickListener = leftClickListener;
+    }
+
+    public void setOnRightClickListener(View.OnClickListener rightClickListener){
+        this.rightClickListener = rightClickListener;
+    }
+
+    public void setOnContentClickListener(View.OnClickListener onContentClickListener){
+        this.onContentClickListener = onContentClickListener;
+    }
+
+    public void onClickContent(View view){
+        if (onContentClickListener!=null){
+            onContentClickListener.onClick(view);
+        }
+    }
+
 
 }

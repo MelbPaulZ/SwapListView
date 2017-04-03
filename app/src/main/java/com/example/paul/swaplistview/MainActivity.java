@@ -27,5 +27,11 @@ public class MainActivity extends AppCompatActivity {
         }
         BaseAdapter adapter = new ArrayAdapter(getApplicationContext(), R.layout.listview_single, R.id.name,lists);
         listView.setAdapter(new SwapableAdapter<>(getApplicationContext(), adapter, lists));
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                Log.i("", "onItemClick: " + "itemClick: " + position);
+            }
+        });
     }
 }

@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ViewConfiguration;
 import android.widget.ListView;
+import android.widget.Toast;
 
 /**
  * Created by Paul on 29/3/17.
@@ -48,6 +49,14 @@ public class SwapableListView extends ListView {
     }
 
     @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        if (curSwapedView!=null && curSwapedView.isOpen()){
+            return true;
+        }
+        return super.onInterceptTouchEvent(ev);
+    }
+
+    @Override
     public boolean onTouchEvent(MotionEvent ev) {
         int curSwapPosition = pointToPosition((int)ev.getX(), (int)ev.getY());
         if (ev.getAction() == MotionEvent.ACTION_DOWN){ // save curSwapPosition to ensure each time only one item is swapped
@@ -58,8 +67,15 @@ public class SwapableListView extends ListView {
                 if (preSwapedView.equals(curSwapedView)){
                     direction = DIRECTION_VERTICAL;
                     if (curSwapedView.getSwapStatue()!= SwapLayout.SWAP_STATUS_ORIGIN) {
+                        if (ev.getX() < SwapLayout.SWAP_DISTANCE){
+                            curSwapedView.getLeftSwapMenuView().onClick(curSwapedView.getLeftSwapMenuView());
+                        }else if (ev.getX() > getWidth() - SwapLayout.SWAP_DISTANCE){
+                            curSwapedView.getRightSwapMenuView().onClick(curSwapedView.getRightSwapMenuView());
+                        }
                         curSwapedView.resetToOriginal();
                         return true;
+                    }else{
+                        curSwapedView.onClickContent(curSwapedView.getContentView());
                     }
                 }else{
                     preSwapedView.resetToOriginal(); // change the previous swapped view to original status if previous view is not current view
@@ -71,7 +87,12 @@ public class SwapableListView extends ListView {
         }else if (ev.getAction() == MotionEvent.ACTION_UP){
             preSwapedView = curSwapedView;
             direction = DIRECTION_NONE;
-            curSwapedView.onSwap(ev);
+
+            if (curSwapedView!=null) { // when swap from another view, this might be null
+                curSwapedView.onSwap(ev);
+            }
+
+
         }else if (ev.getAction() == MotionEvent.ACTION_MOVE){
             if (direction == DIRECTION_VERTICAL){
                 if (curSwapedView!=null){

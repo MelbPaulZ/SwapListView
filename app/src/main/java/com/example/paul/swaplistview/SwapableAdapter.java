@@ -4,13 +4,12 @@ import android.content.Context;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
 import android.support.annotation.NonNull;
-import android.view.LayoutInflater;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Adapter;
-import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ListAdapter;
+import android.widget.Toast;
 
 import java.util.List;
 
@@ -52,13 +51,35 @@ public class SwapableAdapter<T extends Object> extends BaseAdapter{
     public View getView(int position, View convertView, ViewGroup parent) {
         SwapLayout layout = null;
         if (convertView == null){
-            View contentView = adapter.getView(position, convertView, parent);
+            final View contentView = adapter.getView(position, convertView, parent);
             SwapMenu leftSwapMenu = createMenu();
             SwapMenu rightSwapMenu = createMenu();
             SwapMenuView leftSwapMenuView = new SwapMenuView(leftSwapMenu);
+            leftSwapMenuView.setPosition(position);
+            leftSwapMenuView.setItemClickListener(new SwapMenuView.SwapMenuItemClickListener() {
+                @Override
+                public void onSwapMenuItemClick(SwapMenuView swapMenuView, SwapMenu swapMenu, int index) {
+                    Toast.makeText(context, "onClick content swapMenu", Toast.LENGTH_SHORT).show();
+                }
+            });
             SwapMenuView rightSwapMenuView = new SwapMenuView(rightSwapMenu);
+            rightSwapMenuView.setPosition(position);
+            rightSwapMenuView.setItemClickListener(new SwapMenuView.SwapMenuItemClickListener() {
+                @Override
+                public void onSwapMenuItemClick(SwapMenuView swapMenuView, SwapMenu swapMenu, int index) {
+                    Toast.makeText(context,"onClick right swap" + index, Toast.LENGTH_SHORT).show();
+                }
+            });
             layout = new SwapLayout(contentView, leftSwapMenuView, rightSwapMenuView);
             layout.setPosition(position);
+            layout.setOnContentClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    Toast.makeText(context, "onClick Content", Toast.LENGTH_SHORT).show();
+                }
+            });
+            leftSwapMenuView.setSwapLayout(layout);
+            rightSwapMenuView.setSwapLayout(layout);
         }else{
             layout = (SwapLayout) convertView;
             // to refresh view. otherwise the order will be messed
@@ -78,8 +99,10 @@ public class SwapableAdapter<T extends Object> extends BaseAdapter{
     }
 
 
+
     public interface MenuInterface{
         void createInView(View v);
+        View.OnClickListener leftSwapMenuClickListener();
     }
 
 }
