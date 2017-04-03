@@ -1,6 +1,7 @@
 package com.example.paul.swaplistview;
 
 import android.support.v4.view.GestureDetectorCompat;
+import android.support.v4.view.MotionEventCompat;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
@@ -116,7 +117,11 @@ public class SwapLayout extends FrameLayout {
 
     @Override
     public boolean onTouchEvent(MotionEvent event) {
-        
+        int action = MotionEventCompat.getActionMasked(event);
+        if (action == MotionEvent.ACTION_DOWN){
+            super.onTouchEvent(event);
+            return true;
+        }
 
         gestureDetector.onTouchEvent(event);
         return super.onTouchEvent(event);
