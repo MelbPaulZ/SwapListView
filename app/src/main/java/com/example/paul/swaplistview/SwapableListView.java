@@ -6,8 +6,8 @@ import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.ViewConfiguration;
+import android.widget.AbsListView;
 import android.widget.ListView;
-import android.widget.Toast;
 
 /**
  * Created by Paul on 29/3/17.
@@ -24,6 +24,8 @@ public class SwapableListView extends ListView {
     private int MAX_X = 20;
     private int MAX_Y = 5;
     private boolean mIsScrolling = false;
+    private int mScrollState;
+    private boolean disableNextClickContent = false;
 
     public SwapableListView(Context context) {
         super(context);
@@ -43,6 +45,18 @@ public class SwapableListView extends ListView {
     private void init(){
         scaledTouchSlop = ViewConfiguration.get(getContext()).getScaledTouchSlop();
         direction = DIRECTION_NONE;
+        setOnScrollListener(new OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+                mScrollState = scrollState;
+                Log.i("tag", "onScrollStateChanged: stateChange" + scrollState);
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                Log.i("tag", "onScroll: " + "onScroll");
+            }
+        });
     }
 
     @Override
@@ -50,12 +64,15 @@ public class SwapableListView extends ListView {
         super.setOnItemSelectedListener(listener);
     }
 
+
+
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         int action = MotionEventCompat.getActionMasked(ev);
         if (action == MotionEvent.ACTION_CANCEL || action == MotionEvent.ACTION_UP){
             mIsScrolling = false;
-            return false;
+            onTouchEvent(ev);
+            return super.onInterceptTouchEvent(ev);
         }
 
         switch (action){
@@ -72,6 +89,10 @@ public class SwapableListView extends ListView {
                 break;
             }
             case MotionEvent.ACTION_DOWN:
+                if (mScrollState == OnScrollListener.SCROLL_STATE_FLING){
+                    disableNextClickContent = true;
+                }
+
                 startX = ev.getX();
                 startY = ev.getY();
                 int curSwapPosition = pointToPosition((int)ev.getX() , (int) ev.getY());
@@ -85,6 +106,7 @@ public class SwapableListView extends ListView {
                         curSwapedView.getRightSwapMenuView().onClick(curSwapedView.getRightSwapMenuView());
                     }else {
                         preSwapedView.resetToOriginal();
+                        disableNextClickContent = true; // unable next onClick content motion
                         return true;
                     }
                     break;
@@ -105,7 +127,16 @@ public class SwapableListView extends ListView {
         int action = MotionEventCompat.getActionMasked(ev);
         switch (action){
             case MotionEvent.ACTION_UP:{
-                // TODO: 3/4/17 add click content listener 
+                // if is not a scroll down fling touch, then can be treated as onClick Content
+                if (!mIsScrolling
+                        && calculateDistanceX(ev) < scaledTouchSlop
+                        && calculateDistanceY(ev) < scaledTouchSlop
+                        && mScrollState!= OnScrollListener.SCROLL_STATE_FLING
+                        && curSwapedView!=null
+                        && !disableNextClickContent){
+                    curSwapedView.onClickContent(curSwapedView.getContentView());
+                }
+                disableNextClickContent = false; // if is not a scroll down fling touch, then
 
                 mIsScrolling = false;
                 if (curSwapedView!=null){

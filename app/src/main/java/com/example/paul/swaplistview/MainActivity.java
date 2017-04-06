@@ -9,6 +9,7 @@ import android.widget.ArrayAdapter;
 import android.widget.BaseAdapter;
 import android.widget.ListAdapter;
 import android.widget.SimpleAdapter;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,11 +28,13 @@ public class MainActivity extends AppCompatActivity {
         }
         BaseAdapter adapter = new ArrayAdapter(getApplicationContext(), R.layout.listview_single, R.id.name,lists);
         listView.setAdapter(new SwapableAdapter<>(getApplicationContext(), adapter, lists));
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                Log.i("", "onItemClick: " + "itemClick: " + position);
-            }
-        });
+//        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+//            @Override
+//            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+//                Log.i("", "onItemClick: " + "itemClick: " + position);
+//                Toast.makeText(getApplicationContext(), "itemClick  content" , Toast.LENGTH_SHORT).show();
+//            }
+//        });
+
     }
 }
