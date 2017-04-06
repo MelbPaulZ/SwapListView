@@ -26,6 +26,7 @@ public class SwapableListView extends ListView {
     private boolean mIsScrolling = false;
     private int mScrollState;
     private boolean disableNextClickContent = false;
+    private boolean disableNextTouchUp = false;
 
     public SwapableListView(Context context) {
         super(context);
@@ -84,6 +85,7 @@ public class SwapableListView extends ListView {
                 int xDiff = calculateDistanceX(ev);
                 if (xDiff > scaledTouchSlop) {
                     mIsScrolling = true;
+                    curSwapedView.setBeforeX(ev.getX());
                     return true;
                 }
                 break;
@@ -92,7 +94,6 @@ public class SwapableListView extends ListView {
                 if (mScrollState == OnScrollListener.SCROLL_STATE_FLING){
                     disableNextClickContent = true;
                 }
-
                 startX = ev.getX();
                 startY = ev.getY();
                 int curSwapPosition = pointToPosition((int)ev.getX() , (int) ev.getY());
@@ -107,6 +108,7 @@ public class SwapableListView extends ListView {
                     }else {
                         preSwapedView.resetToOriginal();
                         disableNextClickContent = true; // unable next onClick content motion
+                        disableNextTouchUp = true;
                         return true;
                     }
                     break;
@@ -140,7 +142,11 @@ public class SwapableListView extends ListView {
 
                 mIsScrolling = false;
                 if (curSwapedView!=null){
-                    curSwapedView.onSwap(ev);
+                    if (disableNextTouchUp){ // the disable next touch up will not let the child view stop animation
+                        disableNextTouchUp = false;
+                    }else {
+                        curSwapedView.onSwap(ev);
+                    }
                 }
                 break;
             }

@@ -2,9 +2,11 @@ package com.example.paul.swaplistview;
 
 import android.support.v4.view.GestureDetectorCompat;
 import android.support.v4.view.MotionEventCompat;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewConfiguration;
 import android.view.animation.Animation;
 import android.view.animation.DecelerateInterpolator;
 import android.view.animation.Interpolator;
@@ -22,7 +24,7 @@ public class SwapLayout extends FrameLayout {
     private View.OnClickListener leftClickListener, rightClickListener, onContentClickListener;
     private GestureDetector.OnGestureListener gestureListener;
     private GestureDetectorCompat gestureDetector;
-    private float beforeX, beforeY, currentX, currentY;
+    private float beforeX, beforeY, currentX, currentY, contentViewBeforeX;
     private int swapStatue;
     private int position;
     private int curSwapPosition = -1;
@@ -34,8 +36,8 @@ public class SwapLayout extends FrameLayout {
     public final static int SWAP_STATUS_ORIGIN = 1002;
 
     // swap direction indicate the current swap direction {left, right}
-    public final static int SWAP_DIRECTION_LEFT = -5;
-    public final static int SWAP_DIRECTION_RIGHT = 5;
+    public final static int SWAP_DIRECTION_LEFT = -1;
+    public final static int SWAP_DIRECTION_RIGHT = 1;
     public static int SWAP_DISTANCE = 150;
 
 
@@ -151,10 +153,11 @@ public class SwapLayout extends FrameLayout {
         beforeX = event.getX();
         beforeY = event.getY();
         curSwapPosition = position;
+        contentViewBeforeX = contentView.getX(); // save contentView x coordination so that can use this to scroll
     }
 
     private void scrollMenuLayout(MotionEvent event){
-        int leftScroll = (int) ( event.getX() - beforeX + contentView.getLeft());
+        int leftScroll = (int) ( event.getX() - beforeX + contentViewBeforeX);
         if (leftScroll < -SWAP_DISTANCE || leftScroll  > SWAP_DISTANCE){
             leftScroll = swapDirection==SWAP_DIRECTION_LEFT ? -SWAP_DISTANCE : SWAP_DISTANCE;
         }
@@ -229,6 +232,10 @@ public class SwapLayout extends FrameLayout {
         }
     }
 
+    public void scrollToOrigin(){
+        contentView.offsetLeftAndRight(-150);
+    }
+
     private void applyAnimation(float fromAbsoluteX, float toAbsoluteX){
         Animation ani = new TranslateAnimation(
                 fromAbsoluteX, toAbsoluteX, 0.0f, 0.0f);
@@ -244,6 +251,10 @@ public class SwapLayout extends FrameLayout {
 
     public boolean isOpen(){
         return swapStatue == SWAP_STATUS_LEFT || swapStatue == SWAP_STATUS_RIGHT;
+    }
+
+    public void setBeforeX(float beforeX) {
+        this.beforeX = beforeX;
     }
 
     public void setSwapStatue(int swapStatue) {
